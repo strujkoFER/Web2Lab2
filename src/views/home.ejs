@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home</title>
+  </head>
+  <body>
+    <h1>Prikaz reflektiranog XSS-a (Tutorial for XSS)</h1>
+    <p>
+      Reflektiran XSS je ranjivost koja omogućava izvršavanje zlonamjernog javascript koda na korisnikovom pretraživaču.
+      Kako bi se XSS izbjegao potrebno je pravilno filtrirati korisnički unos. Ako se unos ne filtrira nego se
+      vrijednost direktno prikazuje u HTML-u, može doći do XSS-a.
+      Kao primjer, unesite sljedeći kod u polje za ime:
+      <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code>
+    </p>
+    <br />
+
+    <form method="GET">
+    <label for="checkbox">Dopusti XSS:</label>
+    <input
+      type="checkbox"
+      id="checkboxXSS"
+      name="checkboxXSS"
+      value="on"
+      <%= checkboxXSS ? "checked" : "" %>
+      onchange="this.form.submit()"
+    />
+    <br />
+    <label for="name">Ime:</label>
+    <input
+      type="text"
+      id="name"
+      name="name"
+      value="<%= name %>"
+    />
+    <button type="submit">Submit</button>
+  </form>
+
+  <div>
+    <% if (checkboxXSS) { %>
+        <p>Pozdrav, <%- name %></p>
+    <% } else { %>
+        <p>Pozdrav, <%= name %></p>
+    <% } %>
+  </div>
+
+
+
+
+  <h1>Prikaz loše kontrole pristupa (Broken access control)</h1>
+    <p>
+      Loša kontrola pristupa je ranjivost koja omogućava korisnicima pristup resursima kojima ne bi smjeli imati pristup.
+      Ovdje je to prikazano kao kontrola pristupa po korisniku i ID-ju dokumenata u URL-u <code>GET /documents/${id}?user=${user}</code>
+      Alice je vlasnik dokumenta s ID-jem 1, dok je Bob vlasnik dokumenta s ID-jem 2.
+      Alice ne bi smjela moći vidjeti Bobov dokument nego bi trebala dobiti Forbidden.
+      Probajte staviti da ste ulogirani kao Alice i pristupiti dokumentu s ID-jem 2.
+    </p>
+    <p>
+      Napomene
+      </p>
+      <ul>
+        <li>Inače bih stavio upute za direktno mijenjanje ID-ja u URL-u jer je to bliže stvarnom napadu, ali radi jednostavnosti (traženje URL-a) je ovdje polje za odabir ID-ja. Inače ne bi bilo polja nego ili sam gumb ili samo automatsko zvanje dokumenta.</li>
+        <li>Također, s obzirom da je cilj demonstrirati napad, namjerno je user stavljen kao parametar u URL-u jer simulira ulogiranog korisnika.</li>
+      </ul>
+    <br />
+
+    <form method="GET">
+    <label for="checkbox">Dopusti lošu kontrolu pristupa:</label>
+    <input
+      type="checkbox"
+      id="checkboxAccess"
+      name="checkboxAccess"
+      value="on"
+      <%= checkboxAccess ? "checked" : "" %>
+      onchange="this.form.submit()"
+    />
+    <br />
+    <label>Trenutni korisnik:</label>
+    <select id="user" name="user">
+        <option value="Alice" <%= user === "Alice" ? "selected" : "" %>>Alice</option>
+        <option value="Bob" <%= user === "Bob" ? "selected" : "" %>>Bob</option>
+    </select>
+    <button type="submit">Submit</button>
+  </form>
+
+  <div>
+
+  <label>ID dokumenta:</label>
+    <input type="number" id="documentId" value="1">
+
+    <button onclick="getDocument()">Get Document</button>
+
+    <pre id="result"></pre>
+  </div>
+
+    <script>
+      async function getDocument() {
+            const user = document.getElementById('user').value;
+            const id = document.getElementById('documentId').value;
+
+            const response = await fetch(
+                `/documents/${id}?user=${user}`
+            );
+            const result = await response.text();
+            document.getElementById('result').textContent = result;
+        }
+    </script>
+
+
+  </body>
+</html>
