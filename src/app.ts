@@ -4,7 +4,11 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-const port = 3000;
+
+const externalUrl = process.env.RENDER_EXTERNAL_URL;
+const port =
+  externalUrl && process.env.PORT ? parseInt(process.env.PORT) : 4080;
+const baseURL = externalUrl || `http://localhost:${port}`;
 
 app.set("view engine", "ejs");
 app.set("views", "./views");
@@ -51,6 +55,8 @@ app.get("/documents/:id", (req, res) => {
   res.json(document);
 });
 
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+const hostname = externalUrl ? "0.0.0.0" : "127.0.0.1";
+app.listen(port, hostname, () => {
+  console.log(`Server locally running at http://${hostname}:${port}`);
+  if (externalUrl) console.log(`External URL: ${externalUrl}`);
 });
